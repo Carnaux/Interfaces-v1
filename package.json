@@ -1,0 +1,12 @@
+{
+  "name": "web-interfaces",
+  "version": "1.0.0",
+  "description": "This is a library to create dynamic HTML interfaces for Three.js scenes.",
+  "main": "build/UI.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Fernandes (Carnaux) ",
+  "license": "MIT",
+  "homepage": "https://github.com/Carnaux/Interfaces"
+}
