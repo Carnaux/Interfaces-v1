@@ -11,7 +11,7 @@ It depends on Three.js and CSS3DRenderer modules!
 import * as THREE from "three";
 import { CSS3DRenderer, CSS3DObject, CSS3DSprite } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 
-If you are not using an node based application change the paths to relative ones. e.g, './node_modules/three/build/three.module.js'
+If you are not using a node based application change the paths to relative ones. e.g, './node_modules/three/build/three.module.js'
 
 ### Install 
 
