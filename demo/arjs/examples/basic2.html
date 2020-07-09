@@ -24,10 +24,15 @@
 	<div id="css"></div>
     <div id="webgl"></div>
 <script type="module">
+	import {CSS3DRenderer, CSS3DObject} from '../node_modules/three/examples/jsm/renderers/CSS3DRenderer.js'
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Init
 	//////////////////////////////////////////////////////////////////////////////////
-	import UIXR from './extendCSS3D.js'
+	var renderer2 = new CSS3DRenderer();
+    renderer2.setSize( window.innerWidth, window.innerHeight );
+    renderer2.domElement.style.position = 'absolute';
+    renderer2.domElement.style.top = 0;
+    document.querySelector('#css').appendChild( renderer2.domElement );
 	// init renderer
 	var renderer	= new THREE.WebGLRenderer({
 		antialias: true,
@@ -45,6 +50,7 @@
 
 	// init scene and camera
 	var scene = new THREE.Scene();
+	var scene2 = new THREE.Scene();
 
 	//////////////////////////////////////////////////////////////////////////////////
 	//		Initialize a basic camera
@@ -55,7 +61,7 @@
 	scene.add(camera);
 
 
-	var ui = new UIXR.UI(scene, camera, renderer, document.getElementById("css"));
+	
 	////////////////////////////////////////////////////////////////////////////////
 	//          handle arToolkitSource
 	////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +93,7 @@
 	function onResize(){
 		arToolkitSource.onResizeElement()
 		arToolkitSource.copyElementSizeTo(renderer.domElement)
-		arToolkitSource.copyElementSizeTo(ui.css3DRenderer.domElement)
+		// arToolkitSource.copyElementSizeTo(ui.css3DRenderer.domElement)
 		if( arToolkitContext.arController !== null ){
 			arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
 		}
@@ -122,9 +128,9 @@
 		// console.log(camera.position.distanceTo(new THREE.Vector3()))
 		// console.log(scene.position)
 
-		for(let i = 0; i < ui.css3DScene.children.length; i++){
-			ui.css3DScene.children[i].visible = camera.visible
-		}
+		// for(let i = 0; i < ui.css3DScene.children.length; i++){
+		// 	ui.css3DScene.children[i].visible = camera.visible
+		// }
 	})
 	// console.log(ui.css3DScene)
 	console.log(arToolkitSource);
@@ -143,7 +149,7 @@
 	})
 	// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
 	scene.visible = false;
-	ui.css3DScene.visible = false;
+	// ui.css3DScene.visible = false;
 	//////////////////////////////////////////////////////////////////////////////////
 	//		add an object in the scene
 	//////////////////////////////////////////////////////////////////////////////////
@@ -168,15 +174,71 @@
 	// console.log(ui.css3DRenderer)
 	let el = "<div style='width:100px; height:100px; background-color: red;'><button>sasas</button></div>"
 
-    ui.createUIElement(el, "html-string").then( uiel => {
-        ui.add(uiel);
-	});
-	
 	var axesHelper = new THREE.AxesHelper( 5 );
 	scene.add( axesHelper );
 	// setInterval(() =>{
 	// 	console.log(scene.matrixWorld.elements);
 	// }, 300)
+
+	for ( var i = 0; i < 50; i ++ ) {
+
+		var element = document.createElement( 'div' );
+		element.style.width = '100px';
+		element.style.height = '100px';
+		element.style.opacity = 0.999;
+		element.style.background = new THREE.Color(
+		Math.random() * 0.21568627451 + 0.462745098039,
+		Math.random() * 0.21568627451 + 0.462745098039,
+		Math.random() * 0.21568627451 + 0.462745098039,
+		).getStyle();
+		element.textContent = "I am editable text!"
+		element.setAttribute('contenteditable', '')
+
+		var domObject = new CSS3DObject( element );
+		domObject.position.x = Math.random() * 600 - 300;
+		domObject.position.y = Math.random() * 600 - 300;
+		domObject.position.z = Math.random() * 800 - 600;
+		domObject.rotation.x = Math.random();
+		domObject.rotation.y = Math.random();
+		domObject.rotation.z = Math.random();
+		//domObject.scale.x = Math.random() + 0.5;
+		//domObject.scale.y = Math.random() + 0.5;
+		scene2.add( domObject );
+
+		// make an invisible plane for the DOM element to chop
+		// clip a WebGL geometry with it.
+		~function() {
+			var material = new THREE.MeshPhongMaterial({
+				opacity	: 0.2,
+				color	: new THREE.Color('black'),
+				blending: THREE.NoBlending,
+				side	: THREE.DoubleSide,
+			});
+			var geometry = new THREE.PlaneGeometry( 100, 100 );
+			var mesh = new THREE.Mesh( geometry, material );
+			mesh.position.copy( domObject.position );
+			mesh.rotation.copy( domObject.rotation );
+			//mesh.scale.copy( domObject.scale );
+			mesh.castShadow = false;
+			mesh.receiveShadow = true;
+			scene.add( mesh );
+		}()
+		//~function() {
+			//var material = new THREE.ShadowMaterial({
+				//opacity	: 0.2,
+				////color	: new THREE.Color('black'),
+				////blending: THREE.NoBlending,
+				////side	: THREE.DoubleSide,
+			//});
+			//var geometry = new THREE.PlaneGeometry( 100, 100 );
+			//var mesh = new THREE.Mesh( geometry, material );
+			//mesh.position.copy( domObject.position );
+			//mesh.rotation.copy( domObject.rotation );
+			////mesh.scale.copy( domObject.scale );
+			//scene.add( mesh );
+		//}()
+
+	}
 
 
 	onRenderFcts.push(function(delta){
@@ -190,18 +252,15 @@
 	// render the scene
 	onRenderFcts.push(function(){
 	
-
-		
-
 		// console.log(pos);
 
 		// if(pos.x != NaN){
 		// 	document.getElementById()
 		// }
 
-		
+
 		renderer.render( scene, camera );
-		ui.updateXR();
+		renderer2.render( scene2, camera );
 	})
 
 	// run the rendering loop
