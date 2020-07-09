@@ -8,7 +8,7 @@ import {
 	Matrix4,
 	Object3D,
 	Vector3
-} from "three/build/three.module";
+} from "../node_modules/three/build/three.module.js";
 
 var CSS3DObject = function ( element ) {
 
