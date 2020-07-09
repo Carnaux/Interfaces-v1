@@ -411,16 +411,15 @@ var CSS3DRenderer = function () {
 		var x_pos = translation.x + pos.x;
 		var y_pos = translation.y + pos.y;
 		var z_pos = -translation.z;
+		// console.log(pos)
 
 		var cameraCSSMatrix = camera.isOrthographicCamera ?
 			'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse) :
 			'translateZ(' + fov + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse);
 
-		// var style = 'translateZ(' + pos.z + 'px)' + cameraCSSMatrix +
-		// 	'translate(' + (pos.x) + 'px,' + pos.y + 'px)' ;
-			// 'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
-			// 'translate(' + epsilon(pos.x) + 'px,' + epsilon(pos.y) + 'px)' ;
-			var style = 'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
+			var style = cameraCSSMatrix +
+			'translate(' + pos.x + 'px,' + pos.y + 'px)';
+
 		if ( cache.camera.style !== style && ! isIE ) {
 
 			cameraElement.style.WebkitTransform = style;
@@ -496,16 +495,18 @@ class UI {
 		this.camera.updateMatrixWorld();
 		pos.project(this.camera);
 		
-		let widthHalf = window.innerWidth / 2;
-		let heightHalf = window.innerHeight / 2;
-		
-		pos.x = (pos.x * widthHalf) + widthHalf;
-		pos.y = - (pos.y * heightHalf) + heightHalf;
+		let widthHalf = this.renderer.domElement.offsetWidth / 2;
+		let heightHalf = this.renderer.domElement.offsetHeight / 2;
+
+		pos.x = ( pos.x + 1) * widthHalf;
+		pos.y = - ( pos.y - 1) * heightHalf;
+		// pos.x = (pos.x * widthHalf) + widthHalf;
+		// pos.y = - (pos.y * heightHalf) + heightHalf;
 		pos.z = new THREE.Vector3().distanceTo(this.camera.position);
 		// console.log(pos)
 		// console.log(this.camera.quaternion);
-        // this.css3DRenderer.renderXR( this.css3DScene, this.camera, pos);                  
-		this.css3DRenderer.render( this.css3DScene, this.camera);  
+        this.css3DRenderer.renderXR( this.css3DScene, this.camera, pos);                  
+		// this.css3DRenderer.render( this.css3DScene, this.camera);  
         // if(pos.x != NaN){
         //     // this.css3DStyle.transformOrigin = pos.x + "px " + pos.y + "py";
         //     this.css3DRenderer.domElement.children[0].style.translateX = pos.x + "px "; 
