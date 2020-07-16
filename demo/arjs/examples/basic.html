@@ -174,10 +174,6 @@
 	
 	var axesHelper = new THREE.AxesHelper( 5 );
 	scene.add( axesHelper );
-	// setInterval(() =>{
-	// 	console.log(scene.matrixWorld.elements);
-	// }, 300)
-
 
 	onRenderFcts.push(function(delta){
 		mesh.rotation.x += Math.PI*delta
@@ -189,16 +185,6 @@
 
 	// render the scene
 	onRenderFcts.push(function(){
-	
-
-		
-
-		// console.log(pos);
-
-		// if(pos.x != NaN){
-		// 	document.getElementById()
-		// }
-
 		renderer.render( scene, camera );
 		ui.updateXR();
 	})

@@ -75,6 +75,12 @@ var CSS3DRenderer = function () {
 		objects: new WeakMap()
 	};
 
+	var cameraParams = {
+		pos: new THREE.Vector3(),
+		quat: new THREE.Quaternion(),
+		sca: new THREE.Vector3()
+	}
+
 	var domElement = document.createElement( 'div' );
 	domElement.style.overflow = 'hidden';
 
@@ -145,15 +151,47 @@ var CSS3DRenderer = function () {
 
 	}
 
-	function getCameraTranslation(matrix) {
+	function getCameraMatrix(matrix) {
 
 		var elements = matrix.elements;
 
-		return  {
-			x: elements[ 3 ],
-			y: elements[ 7 ],
-			z: elements[ 11 ]
-		}
+		// let position = new THREE.Vector3();
+		// let quaternion = new THREE.Quaternion();
+		// let scale = new THREE.Vector3();
+
+		// matrix.decompose(position, quaternion, scale);
+
+		// // position.copy(pos);
+		// position.z = 0
+
+		// let mat = new THREE.Matrix4().compose(pos, quaternion, scale);
+		// // mat.setPosition(pos.x, pos.y, fov);
+		// // mat.makeRotationFromQuaternion(quaternion);
+		// // mat.makeTranslation(pos.x, pos.y, fov);
+		// // mat.makeScale(scale.x, scale.y, scale.z);
+		// // mat.makeScale(fov,fov,fov)
+
+		// // console.log(mat)
+	    // var elements = mat.elements;
+
+		return 'matrix3d(' +
+			epsilon( elements[ 0 ] ) + ',' +
+			epsilon( - elements[ 1 ] ) + ',' +
+			epsilon( elements[ 2 ] ) + ',' +
+			epsilon( elements[ 3 ] ) + ',' +
+			epsilon( elements[ 4 ] ) + ',' +
+			epsilon( - elements[ 5 ] ) + ',' +
+			epsilon( elements[ 6 ] ) + ',' +
+			epsilon( elements[ 7 ] ) + ',' +
+			epsilon( elements[ 8 ] ) + ',' +
+			epsilon( - elements[ 9 ] ) + ',' +
+			epsilon( elements[ 10 ] ) + ',' +
+			epsilon( elements[ 11 ] ) + ',' +
+			epsilon( elements[ 12 ] ) + ',' +
+			epsilon( - elements[ 13 ] ) + ',' +
+			epsilon( elements[ 14 ] ) + ',' +
+			epsilon( elements[ 15 ] ) +
+		')';
 	}
 
 	function getObjectCSSMatrix( matrix, cameraCSSMatrix) {
@@ -217,8 +255,8 @@ var CSS3DRenderer = function () {
 
 			} else {
 
-				style = getObjectCSSMatrix( object.matrixWorld, cameraCSSMatrix);
-
+				style = getObjectCSSMatrix( object.matrixWorld, cameraCSSMatrix );
+				
 			}
 
 			var element = object.element;
@@ -374,9 +412,8 @@ var CSS3DRenderer = function () {
 
 	};
 
-	this.renderXR = function ( scene, camera, pos) {
-
-		var fov = camera.projectionMatrix.elements[ 5 ] * _heightHalf;
+	this.renderAR = function ( scene, camera) {
+		
 
 		if ( cache.camera.fov !== fov ) {
 
@@ -400,25 +437,28 @@ var CSS3DRenderer = function () {
 		if ( camera.parent === null ) camera.updateMatrixWorld();
 
 		if ( camera.isOrthographicCamera ) {
-
 			var tx = - ( camera.right + camera.left ) / 2;
 			var ty = ( camera.top + camera.bottom ) / 2;
-
 		}
+			
+		let pos = new THREE.Vector3(0,0,0);
+		camera.updateMatrixWorld();
+		pos.project(camera);
 
-		var translation = getCameraTranslation( camera.matrixWorld );
+		pos.x = (pos.x * _widthHalf);
+		pos.y = - (pos.y * _heightHalf);
 
-		var x_pos = translation.x + pos.x;
-		var y_pos = translation.y + pos.y;
-		var z_pos = -translation.z;
-		// console.log(pos)
+		var fov = (camera.projectionMatrix.elements[ 5 ] * _heightHalf)
+
+
+		// getCameraMatrix(camera.matrixWorldInverse, pos, fov)
 
 		var cameraCSSMatrix = camera.isOrthographicCamera ?
-			'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse) :
-			'translateZ(' + fov + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse);
+		'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse ) :
+		'translate3d(' + (pos.x + 2) + 'px,' + (pos.y - 2) + 'px,' + 0 + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse );
 
-			var style = cameraCSSMatrix +
-			'translate(' + pos.x + 'px,' + pos.y + 'px)';
+		var style = cameraCSSMatrix +
+		'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
 
 		if ( cache.camera.style !== style && ! isIE ) {
 
@@ -476,42 +516,16 @@ class UI {
 
         this.css3DRenderer.domElement.appendChild( cameraElement );
 
-     
-        
-        console.log(this.renderer);
+    
+        // console.log(this.renderer);
     }
 
     update(){
         this.css3DRenderer.render( this.css3DScene, this.camera );
     }
 
-    updateXR(){
-
-        // var width = window.innerWidth, height = window.innerHeight;
-        // var widthHalf = width / 2, heightHalf = height / 2;
-        
-		let pos = new THREE.Vector3();
-		pos = pos.setFromMatrixPosition(this.scene.matrixWorld);
-		this.camera.updateMatrixWorld();
-		pos.project(this.camera);
-		
-		let widthHalf = this.renderer.domElement.offsetWidth / 2;
-		let heightHalf = this.renderer.domElement.offsetHeight / 2;
-
-		pos.x = ( pos.x + 1) * widthHalf;
-		pos.y = - ( pos.y - 1) * heightHalf;
-		// pos.x = (pos.x * widthHalf) + widthHalf;
-		// pos.y = - (pos.y * heightHalf) + heightHalf;
-		pos.z = new THREE.Vector3().distanceTo(this.camera.position);
-		// console.log(pos)
-		// console.log(this.camera.quaternion);
-        this.css3DRenderer.renderXR( this.css3DScene, this.camera, pos);                  
-		// this.css3DRenderer.render( this.css3DScene, this.camera);  
-        // if(pos.x != NaN){
-        //     // this.css3DStyle.transformOrigin = pos.x + "px " + pos.y + "py";
-        //     this.css3DRenderer.domElement.children[0].style.translateX = pos.x + "px "; 
-        //     // pos.y + "py";
-        // }
+    updateAR(){
+        this.css3DRenderer.renderAR( this.css3DScene, this.camera);
     }
 
     
@@ -523,15 +537,22 @@ class UI {
             domObject = new CSS3DObject( el );
         }else if(type == "html-string"){
             var parser = new DOMParser();
-            var htmlDoc = parser.parseFromString(el, 'text/html');
-            domObject = new CSS3DObject( htmlDoc.body );
+			var htmlDoc = parser.parseFromString(el, 'text/html');
+			// console.log(htmlDoc.body.children)
+
+			var parentDiv = document.createElement('div');
+			while (htmlDoc.body.childNodes.length > 0) {
+				parentDiv.appendChild(htmlDoc.body.childNodes[0]);
+			}
+			domObject = new CSS3DObject( parentDiv );
+			// console.log(domObject)
         }else if(type == "html-file"){
             try{
                 let text = await this.requestFile(el);
                 let parser = new DOMParser();
                 let htmlDoc = parser.parseFromString(text, 'text/html');
                 domObject = new CSS3DObject( htmlDoc.body );
-                console.log(domObject);
+               
             }catch(error){
                 console.log("Error fetching remote HTML: ", error);
             }
@@ -597,4 +618,4 @@ class UI {
 
 }
 
-export default { CSS3DObject, CSS3DSprite, CSS3DRenderer, UI };
+export default { UI };
