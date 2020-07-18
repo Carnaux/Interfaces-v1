@@ -3,11 +3,15 @@
  * @author mrdoob / http://mrdoob.com/
  * @author yomotsu / https://yomotsu.net/
  */
+/**
+ * Modified by @author Carnaux / 
+ */
 
 import {
 	Matrix4,
 	Object3D,
-	Vector3
+	Vector3,
+	Camera
 } from "../node_modules/three/build/three.module.js";
 
 var CSS3DObject = function ( element ) {
@@ -74,12 +78,6 @@ var CSS3DRenderer = function () {
 		camera: { fov: 0, style: '' },
 		objects: new WeakMap()
 	};
-
-	var cameraParams = {
-		pos: new THREE.Vector3(),
-		quat: new THREE.Quaternion(),
-		sca: new THREE.Vector3()
-	}
 
 	var domElement = document.createElement( 'div' );
 	domElement.style.overflow = 'hidden';
@@ -149,49 +147,6 @@ var CSS3DRenderer = function () {
 			epsilon( elements[ 15 ] ) +
 		')';
 
-	}
-
-	function getCameraMatrix(matrix) {
-
-		var elements = matrix.elements;
-
-		// let position = new THREE.Vector3();
-		// let quaternion = new THREE.Quaternion();
-		// let scale = new THREE.Vector3();
-
-		// matrix.decompose(position, quaternion, scale);
-
-		// // position.copy(pos);
-		// position.z = 0
-
-		// let mat = new THREE.Matrix4().compose(pos, quaternion, scale);
-		// // mat.setPosition(pos.x, pos.y, fov);
-		// // mat.makeRotationFromQuaternion(quaternion);
-		// // mat.makeTranslation(pos.x, pos.y, fov);
-		// // mat.makeScale(scale.x, scale.y, scale.z);
-		// // mat.makeScale(fov,fov,fov)
-
-		// // console.log(mat)
-	    // var elements = mat.elements;
-
-		return 'matrix3d(' +
-			epsilon( elements[ 0 ] ) + ',' +
-			epsilon( - elements[ 1 ] ) + ',' +
-			epsilon( elements[ 2 ] ) + ',' +
-			epsilon( elements[ 3 ] ) + ',' +
-			epsilon( elements[ 4 ] ) + ',' +
-			epsilon( - elements[ 5 ] ) + ',' +
-			epsilon( elements[ 6 ] ) + ',' +
-			epsilon( elements[ 7 ] ) + ',' +
-			epsilon( elements[ 8 ] ) + ',' +
-			epsilon( - elements[ 9 ] ) + ',' +
-			epsilon( elements[ 10 ] ) + ',' +
-			epsilon( elements[ 11 ] ) + ',' +
-			epsilon( elements[ 12 ] ) + ',' +
-			epsilon( - elements[ 13 ] ) + ',' +
-			epsilon( elements[ 14 ] ) + ',' +
-			epsilon( elements[ 15 ] ) +
-		')';
 	}
 
 	function getObjectCSSMatrix( matrix, cameraCSSMatrix) {
@@ -294,6 +249,79 @@ var CSS3DRenderer = function () {
 		for ( var i = 0, l = object.children.length; i < l; i ++ ) {
 
 			renderObject( object.children[ i ], scene, camera, cameraCSSMatrix);
+
+		}
+
+	}
+
+	function renderObjectAR( object, scene, camera, cameraCSSMatrix) {
+
+		if ( object instanceof CSS3DObject ) {
+
+			object.onBeforeRender( _this, scene, camera );
+
+			var style;
+
+			let k = new THREE.Vector3().distanceTo(camera.position) / 10;
+			var fov = ((2/k) + 0.1)/2;
+
+			if ( object instanceof CSS3DSprite ) {
+
+				// http://swiftcoder.wordpress.com/2008/11/25/constructing-a-billboard-matrix/
+
+				matrix.copy( camera.matrixWorldInverse );
+				matrix.transpose();
+				matrix.copyPosition( object.matrixWorld );
+				matrix.scale( object.scale );
+
+				matrix.elements[ 3 ] = 0;
+				matrix.elements[ 7 ] = 0;
+				matrix.elements[ 11 ] = 0;
+				matrix.elements[ 15 ] = 1;
+
+				style = getObjectCSSMatrix( matrix, cameraCSSMatrix);
+
+			} else {
+
+				style = 'scale(' + fov + ')' + getObjectCSSMatrix( object.matrixWorld, cameraCSSMatrix );
+				
+			}
+
+			var element = object.element;
+			var cachedObject = cache.objects.get( object );
+
+			if ( cachedObject === undefined || cachedObject.style !== style ) {
+
+				element.style.WebkitTransform = style;
+				element.style.transform = style;
+
+				var objectData = { style: style };
+
+				if ( isIE ) {
+
+					objectData.distanceToCameraSquared = getDistanceToSquared( camera, object );
+
+				}
+
+				cache.objects.set( object, objectData );
+
+			}
+
+			element.style.display = object.visible ? '' : 'none';
+
+			if ( element.parentNode !== cameraElement ) {
+
+				cameraElement.appendChild( element );
+
+			}
+
+			object.onAfterRender( _this, scene, camera );
+
+		}
+
+		for ( var i = 0, l = object.children.length; i < l; i ++ ) {
+
+			renderObjectAR( object.children[ i ], scene, camera, cameraCSSMatrix);
 
 		}
 
@@ -447,16 +475,13 @@ var CSS3DRenderer = function () {
 
 		pos.x = (pos.x * _widthHalf);
 		pos.y = - (pos.y * _heightHalf);
-
+	
 		var fov = (camera.projectionMatrix.elements[ 5 ] * _heightHalf)
-
-
-		// getCameraMatrix(camera.matrixWorldInverse, pos, fov)
 
 		var cameraCSSMatrix = camera.isOrthographicCamera ?
 		'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse ) :
-		'translate3d(' + (pos.x + 2) + 'px,' + (pos.y - 2) + 'px,' + 0 + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse );
-
+		'translate3d(' + (pos.x + 100) + 'px,' + (pos.y - 100) + 'px,' + 0 + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse );
+	
 		var style = cameraCSSMatrix +
 		'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
 
@@ -469,7 +494,7 @@ var CSS3DRenderer = function () {
 
 		}
 
-		renderObject( scene, scene, camera, cameraCSSMatrix);
+		renderObjectAR( scene, scene, camera, cameraCSSMatrix);
 
 		if ( isIE ) {
 
@@ -516,8 +541,7 @@ class UI {
 
         this.css3DRenderer.domElement.appendChild( cameraElement );
 
-    
-        // console.log(this.renderer);
+        console.log(this.renderer);
     }
 
     update(){
@@ -525,7 +549,9 @@ class UI {
     }
 
     updateAR(){
-        this.css3DRenderer.renderAR( this.css3DScene, this.camera);
+
+		this.css3DRenderer.renderAR( this.css3DScene, this.camera);                  
+		
     }
 
     
@@ -538,14 +564,12 @@ class UI {
         }else if(type == "html-string"){
             var parser = new DOMParser();
 			var htmlDoc = parser.parseFromString(el, 'text/html');
-			// console.log(htmlDoc.body.children)
 
 			var parentDiv = document.createElement('div');
 			while (htmlDoc.body.childNodes.length > 0) {
 				parentDiv.appendChild(htmlDoc.body.childNodes[0]);
 			}
 			domObject = new CSS3DObject( parentDiv );
-			// console.log(domObject)
         }else if(type == "html-file"){
             try{
                 let text = await this.requestFile(el);
