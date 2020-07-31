@@ -2,6 +2,8 @@
 
 This is a library to create dynamic HTML interfaces for Three.js scenes. Also you can use it with Vue.js!
 
+It extends the CSS3DRenderer: https://threejs.org/docs/#examples/en/renderers/CSS3DRenderer 
+
 Based on trusktr example: https://jsfiddle.net/trusktr/jc6j1wmf/
 
 ## Usage
@@ -11,7 +13,7 @@ It depends on Three.js and CSS3DRenderer modules!
 import * as THREE from "three";
 import { CSS3DRenderer, CSS3DObject, CSS3DSprite } from 'three/examples/jsm/renderers/CSS3DRenderer.js';
 
-If you are not using a node based application change the paths to relative ones. e.g, './node_modules/three/build/three.module.js'
+If you are not using an node based application change the paths to relative ones. e.g, './node_modules/three/build/three.module.js'
 
 ### Install 
 

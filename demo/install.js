@@ -3,7 +3,7 @@ var exec = require('child_process').exec;
 jobs =[
     "cd ./three && npm install",
     "cd ./vue && npm install",
-    "cd ./arjs && npm install"
+    "cd ./arjs/examples && npm install"
 ];
 
 function onExec(error, stdout, stderr) {

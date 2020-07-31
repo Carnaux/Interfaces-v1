@@ -5,7 +5,7 @@
     "install-demo": "node install.js",
     "install-vue": "cd ./vue && npm install",
     "install-three": "cd ./three && npm install",
-    "install-arjs": "cd ./arjs && npm install"
+    "install-arjs": "cd ./arjs/examples && npm install"
   },
   "author": "Daniel Fernandes (Carnaux)",
   "license": "MIT",
