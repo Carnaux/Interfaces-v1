@@ -13,6 +13,8 @@
     2.3 Run `npm run install-vue` to install just the vue demo. It might take a while!
 
         To run the Vue demo open a terminal in the vue folder and run `npm run serve` and go to `localhost:8080`.
+    
+    2.4 Run `npm run install-arjs` to install just the AR.js demo.
 
 #### All demos are standalone, so you can use them as templates!
 
